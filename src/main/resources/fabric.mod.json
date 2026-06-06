@@ -1,0 +1,38 @@
+{
+	"schemaVersion": 1,
+	"id": "sword-shield-and-bow",
+	"version": "${version}",
+	"name": "sword shield and bow",
+	"description": "This is an example description! Tell everyone what your mod is about!",
+	"authors": [
+		"Me!"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/sword-shield-and-bow/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.huybao.firstmod.SwordShieldAndBow"
+		],
+		"client": [
+			"com.huybao.firstmod.client.SwordShieldAndBowClient"
+		]
+	},
+	"mixins": [
+		"sword-shield-and-bow.mixins.json",
+		{
+			"config": "sword-shield-and-bow.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
