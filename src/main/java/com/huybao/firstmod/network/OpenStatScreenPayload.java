@@ -7,9 +7,7 @@ import net.minecraft.network.codec.PacketCodecs;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.Identifier;
 
-/**
- * S2C: tells the client to open the stat sheet, carrying everything it needs to display.
- */
+// S2C: open the stat sheet, with everything it needs to show.
 public record OpenStatScreenPayload(
         int championLevel,
         int champXP,

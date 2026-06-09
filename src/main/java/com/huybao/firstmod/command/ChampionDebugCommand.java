@@ -10,17 +10,10 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 
-/**
- * TEMPORARY debug command for testing the champion leveling / stat-screen flow.
- *
- * <ul>
- *   <li>{@code /champion get} – print your current champion data</li>
- *   <li>{@code /champion addxp <n>} – grant XP (triggers level-ups)</li>
- *   <li>{@code /champion open} – force-open the stat screen now</li>
- * </ul>
- *
- * Remove this class (and its {@code register()} call) once testing is done.
- */
+// Temporary test command — remove once we're done:
+//   /champion get        print your data
+//   /champion addxp <n>  grant XP (and level up)
+//   /champion open       force the stat screen open
 public final class ChampionDebugCommand {
 
     private ChampionDebugCommand() {

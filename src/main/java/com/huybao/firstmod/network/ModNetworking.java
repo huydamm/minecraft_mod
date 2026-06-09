@@ -6,32 +6,29 @@ import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.network.ServerPlayerEntity;
 
-/**
- * Registers the mod's custom payloads, the server-side receivers, and the join hook that
- * re-opens the stat screen for players who still owe an allocation. Call from onInitialize().
- */
+// Custom payloads and their server-side handlers. Call from onInitialize().
 public final class ModNetworking {
 
     private ModNetworking() {
     }
 
-    /** Registers payload codecs. Must run on both client and server (common init). */
+    // Register payload codecs — runs on both sides.
     public static void registerPayloads() {
         PayloadTypeRegistry.playS2C().register(OpenStatScreenPayload.ID, OpenStatScreenPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(AllocateStatsPayload.ID, AllocateStatsPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(RequestStatScreenPayload.ID, RequestStatScreenPayload.CODEC);
     }
 
-    /** Registers server-side packet handling and the join resend. */
+    // Server-side packet handling.
     public static void registerServerSide() {
-        // Apply an allocation the client sent us.
+        // client sent us an allocation
         ServerPlayNetworking.registerGlobalReceiver(AllocateStatsPayload.ID, (payload, context) -> {
             ServerPlayerEntity player = context.player();
-            // Networking callbacks run off-thread; hop back onto the server thread to touch data.
+            // receivers run off-thread, so hop back to the server thread before touching data
             context.server().execute(() -> applyAllocation(player, payload));
         });
 
-        // Client (e.g. the inventory button) asked us to open the screen.
+        // client asked us to open the screen (the inventory button)
         ServerPlayNetworking.registerGlobalReceiver(RequestStatScreenPayload.ID, (payload, context) -> {
             ServerPlayerEntity player = context.player();
             context.server().execute(() ->
@@ -39,7 +36,7 @@ public final class ModNetworking {
         });
     }
 
-    /** Sends the S2C open-screen packet built from the given data. */
+    // Send the open-screen packet built from the given data.
     public static void sendOpenScreen(ServerPlayerEntity player, PlayerChampionData data) {
         ServerPlayNetworking.send(player, new OpenStatScreenPayload(
                 data.champLevel(), data.champXP(), data.statPoints(),
@@ -49,7 +46,7 @@ public final class ModNetworking {
     private static void applyAllocation(ServerPlayerEntity player, AllocateStatsPayload payload) {
         PlayerChampionData data = player.getAttachedOrCreate(PlayerChampionData.ATTACHMENT);
 
-        // Clamp negatives and reject over-allocation (the server is authoritative).
+        // server's authoritative: clamp negatives, reject asking for more than they have
         int addVit = Math.max(0, payload.addVitality());
         int addStr = Math.max(0, payload.addStrength());
         int addDex = Math.max(0, payload.addDexterity());
@@ -57,7 +54,7 @@ public final class ModNetworking {
         int requested = addVit + addStr + addDex + addDef;
 
         if (requested > data.statPoints()) {
-            return; // invalid client request; ignore
+            return; // bogus request, ignore it
         }
 
         PlayerChampionData updated = data
@@ -66,11 +63,11 @@ public final class ModNetworking {
                 .withStrength(data.strength() + addStr)
                 .withDexterity(data.dexterity() + addDex)
                 .withDefence(data.defence() + addDef)
-                .withNeedsStatScreen(false); // acknowledged
+                .withNeedsStatScreen(false);
 
         player.setAttached(PlayerChampionData.ATTACHMENT, updated);
 
-        // Re-derive max health / status effects from the new stat totals.
+        // refresh health / effects for the new totals
         ChampionStatEffects.apply(player);
     }
 }

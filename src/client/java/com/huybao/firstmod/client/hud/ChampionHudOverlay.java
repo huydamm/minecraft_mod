@@ -9,11 +9,8 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.text.Text;
 
-/**
- * A small champion-level widget in the top-left of the HUD: the current champion level, a
- * progress bar toward the next level, and the XP count. Reads the synced
- * {@link PlayerChampionData} attachment. Tweak {@link #X} / {@link #Y} to reposition.
- */
+// Top-left HUD widget: champion level, an XP bar, and the XP count.
+// Reads the synced data attachment. Move it with X / Y.
 public class ChampionHudOverlay implements HudElement {
 
     private static final int X = 6;

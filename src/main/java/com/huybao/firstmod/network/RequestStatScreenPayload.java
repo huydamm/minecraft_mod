@@ -6,11 +6,8 @@ import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.Identifier;
 
-/**
- * C2S: the client asks the server to (re)open the stat sheet, e.g. from the inventory
- * button. Carries no data — the server replies with an {@link OpenStatScreenPayload} built
- * from the player's authoritative champion data.
- */
+// C2S: "open my stat sheet" (e.g. the inventory button). No data — the server replies
+// with an OpenStatScreenPayload built from the player's real stats.
 public record RequestStatScreenPayload() implements CustomPayload {
 
     public static final CustomPayload.Id<RequestStatScreenPayload> ID =

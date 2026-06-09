@@ -13,20 +13,13 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 
-/**
- * Turns a player's allocated stats into actual gameplay bonuses:
- * <ul>
- *   <li><b>Vitality</b> — +1/4 heart (0.5 max health) per point.</li>
- *   <li><b>Strength</b> — Strength effect, one tier per 4 points (up to V).</li>
- *   <li><b>Defence</b> — Resistance effect, one tier per 4 points (up to V).</li>
- *   <li><b>Dexterity</b> — Haste and Speed effects, one tier per 4 points (up to V).</li>
- * </ul>
- *
- * Bonuses are re-derived from the player's data on a periodic server tick (and immediately
- * after an allocation). Doing it on a tick — rather than only on respawn/join — reliably
- * survives death, dimension changes and {@code /effect clear}. The apply is idempotent, so
- * it only changes effects/attributes that are actually wrong (no flicker).
- */
+// Turns stats into real bonuses:
+//   vitality  -> +1/4 heart per point
+//   strength  -> Strength, one tier per 4 points (up to V)
+//   defence   -> Resistance, same scaling
+//   dexterity -> Haste + Speed, same scaling
+// We re-apply once a second (and right after an allocation) so the bonuses survive death,
+// dimension changes, /effect clear, etc. It's idempotent, so it only fixes what's wrong.
 public final class ChampionStatEffects {
 
     private static final double HEALTH_PER_VITALITY = 0.5; // 1/4 heart
@@ -51,7 +44,7 @@ public final class ChampionStatEffects {
         });
     }
 
-    /** Re-derives all stat bonuses from the player's champion data (idempotent). */
+    // Rebuild all bonuses from the player's current stats (safe to call repeatedly).
     public static void apply(ServerPlayerEntity player) {
         PlayerChampionData data = player.getAttachedOrCreate(PlayerChampionData.ATTACHMENT);
 

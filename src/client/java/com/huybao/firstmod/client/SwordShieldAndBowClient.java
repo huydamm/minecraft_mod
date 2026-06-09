@@ -17,19 +17,18 @@ import net.minecraft.util.Identifier;
 
 public class SwordShieldAndBowClient implements ClientModInitializer {
 
-	// Standard inventory GUI dimensions, used to place the button relative to the panel.
+	// Vanilla inventory size, for placing the button relative to it.
 	private static final int INVENTORY_WIDTH = 176;
 	private static final int INVENTORY_HEIGHT = 166;
 
 	@Override
 	public void onInitializeClient() {
-		// When the server asks us to, open the stat sheet (on the client/render thread).
+		// server says open the stat sheet -> do it on the client thread
 		ClientPlayNetworking.registerGlobalReceiver(OpenStatScreenPayload.ID, (payload, context) ->
 				context.client().execute(() ->
 						context.client().setScreen(new StatSheetScreen(payload))));
 
-		// Add a "Stats" button to the player inventory that opens the stat sheet. The client
-		// doesn't hold the champion data, so the button just asks the server to open the screen.
+		// "Stats" button in the inventory. The client has no data, so it just asks the server to open.
 		ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
 			if (!(screen instanceof InventoryScreen)) {
 				return;
@@ -45,8 +44,7 @@ public class SwordShieldAndBowClient implements ClientModInitializer {
 			Screens.getButtons(screen).add(statsButton);
 		});
 
-		// Draw a small champion-XP progress bar on the HUD. addLast → rendered on top of the
-		// vanilla bars so nothing paints over it.
+		// champion XP bar on the HUD. addLast = drawn on top so nothing covers it.
 		HudElementRegistry.addLast(
 				Identifier.of(SwordShieldAndBow.MOD_ID, "champion_xp_bar"), new ChampionHudOverlay());
 	}

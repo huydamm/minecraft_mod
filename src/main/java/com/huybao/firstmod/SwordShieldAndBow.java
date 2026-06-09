@@ -13,24 +13,17 @@ import org.slf4j.LoggerFactory;
 public class SwordShieldAndBow implements ModInitializer {
 	public static final String MOD_ID = "sword-shield-and-bow";
 
-	// This logger is used to write text to the console and the log file.
-	// It is considered best practice to use your mod id as the logger's name.
-	// That way, it's clear which mod wrote info, warnings, and errors.
+	// Logger named after the mod id, so it's clear who logged what.
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
 	@Override
 	public void onInitialize() {
-		// Register the per-player champion data attachment (persists through death and restart).
-		PlayerChampionData.initialize();
-		// Register custom payloads (both sides) and server-side packet handling.
-		ModNetworking.registerPayloads();
-		ModNetworking.registerServerSide();
-		// Award champion XP on mob kills and handle level-ups.
-		ChampionLevelManager.register();
-		// Apply stat bonuses (max health / effects) on join and respawn.
-		ChampionStatEffects.register();
-		// TEMPORARY: /champion debug commands for testing (remove when done).
-		ChampionDebugCommand.register();
+		PlayerChampionData.initialize();      // the champion data attachment
+		ModNetworking.registerPayloads();     // packets (both sides)
+		ModNetworking.registerServerSide();   // + their server handlers
+		ChampionLevelManager.register();      // XP from mob kills
+		ChampionStatEffects.register();       // keep stat bonuses applied
+		ChampionDebugCommand.register();      // TEMP: /champion test command
 
 		ModItems.initialize();
 		ModLootTableModifiers.modifyLootTables();

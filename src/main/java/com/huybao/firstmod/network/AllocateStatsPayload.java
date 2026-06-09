@@ -7,10 +7,7 @@ import net.minecraft.network.codec.PacketCodecs;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.Identifier;
 
-/**
- * C2S: the player's chosen allocation — how many points to add to each stat.
- * The server validates this against the player's available statPoints.
- */
+// C2S: how many points to add to each stat. Server checks it against available points.
 public record AllocateStatsPayload(
         int addVitality,
         int addStrength,

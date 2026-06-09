@@ -11,9 +11,7 @@ import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.codec.PacketCodecs;
 import net.minecraft.util.Identifier;
 
-/**
- * Player data: champion Lv, XP, stat points, and the "owed a stat screen" flag.
- */
+// Per-player champion data: level, XP, stat points, the 4 stats, and the "owed a screen" flag.
 public record PlayerChampionData(
         int champLevel,
         int champXP,
@@ -24,13 +22,9 @@ public record PlayerChampionData(
         int dexterity,
         boolean needsStatScreen
 ) {
-    /** Default st 0 / false */
     public static final PlayerChampionData DEFAULT = new PlayerChampionData(0, 0, 0, 0, 0, 0, 0, false);
 
-    /**
-     * Serialization codec. Uses {@code optionalFieldOf} with defaults so that older
-     * saves (or future field additions) deserialize gracefully instead of throwing.
-     */
+    // Save codec. optionalFieldOf means old saves / new fields just default instead of crashing.
     public static final Codec<PlayerChampionData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.INT.optionalFieldOf("champLevel", 0).forGetter(PlayerChampionData::champLevel),
             Codec.INT.optionalFieldOf("champXP", 0).forGetter(PlayerChampionData::champXP),
@@ -42,7 +36,7 @@ public record PlayerChampionData(
             Codec.BOOL.optionalFieldOf("needsStatScreen", false).forGetter(PlayerChampionData::needsStatScreen)
     ).apply(instance, PlayerChampionData::new));
 
-    /** Network codec, used to sync this data to the owning client (for the HUD overlay). */
+    // Network codec — syncs this data to the owning client so the HUD can read it.
     public static final PacketCodec<RegistryByteBuf, PlayerChampionData> PACKET_CODEC = PacketCodec.tuple(
             PacketCodecs.VAR_INT, PlayerChampionData::champLevel,
             PacketCodecs.VAR_INT, PlayerChampionData::champXP,
@@ -55,12 +49,8 @@ public record PlayerChampionData(
             PlayerChampionData::new
     );
 
-    /**
-     * The attachment type. {@code persistent} → saved to disk (survives server restart);
-     * {@code copyOnDeath} → copied to the new player entity on respawn (survives death);
-     * {@code initializer} → default value for players without data yet;
-     * {@code syncWith} → mirrored to the owning client so the HUD can read it.
-     */
+    // The attachment: persistent = saved to disk, copyOnDeath = survives respawn,
+    // initializer = default for new players, syncWith = mirror to the owning client.
     public static final AttachmentType<PlayerChampionData> ATTACHMENT = AttachmentRegistry.create(
             Identifier.of(SwordShieldAndBow.MOD_ID, "champion_data"),
             builder -> builder
@@ -71,7 +61,7 @@ public record PlayerChampionData(
     );
 
     public static void initialize() {
-        // Leave empty for refencing
+        // empty — just here so the mod init can load this class and register the attachment
     }
 
     public PlayerChampionData withChampLevel(int value) {

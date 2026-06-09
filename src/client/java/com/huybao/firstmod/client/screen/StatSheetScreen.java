@@ -9,15 +9,9 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
 
-/**
- * Stat-allocation screen. Shows the player's champion level, an XP progress bar toward the next
- * level, and the remaining stat points, with {@code +}/{@code -} buttons per stat. Points are
- * spent client-side for preview; on Confirm the chosen allocation is sent to the server (which
- * validates and applies it). While points remain unspent, ESC will not close the screen.
- *
- * <p>Stat order: Vitality, Strength, Dexterity, Defence. Note that DrawContext colors are
- * ARGB, so all colors include a 0xFF alpha byte (otherwise the drawing is invisible).</p>
- */
+// Stat screen: level, XP bar, and +/- per stat. Spending is previewed here and
+// sent to the server on Confirm. Can't ESC out while you still have points left.
+// Heads up: DrawContext colors are ARGB, so the 0xFF alpha matters or it's invisible.
 public class StatSheetScreen extends Screen {
 
     private static final String[] STAT_NAMES = {"Vitality", "Strength", "Dexterity", "Defence"};
@@ -26,7 +20,6 @@ public class StatSheetScreen extends Screen {
     private static final int PANEL_HEIGHT = 216;
     private static final int ROW_HEIGHT = 26;
 
-    // ARGB colors (alpha matters — 0x00RRGGBB renders invisible).
     private static final int COLOR_PANEL = 0xE0101018;
     private static final int COLOR_BORDER = 0xFF3F3F8F;
     private static final int COLOR_TEXT = 0xFFFFFFFF;
@@ -100,7 +93,7 @@ public class StatSheetScreen extends Screen {
 
     private void onMinus(int index) {
         if (added[index] <= 0) {
-            return; // can't go below what the server already has
+            return;
         }
         added[index]--;
         remainingPoints++;
@@ -122,8 +115,7 @@ public class StatSheetScreen extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        // Background dim is applied by the framework before render(); draw the panel and
-        // labels first, then let super.render() paint the widgets on top.
+        // Panel and labels first; super.render() paints the buttons on top.
         context.fill(panelLeft - 1, panelTop - 1, panelLeft + PANEL_WIDTH + 1, panelTop + PANEL_HEIGHT + 1, COLOR_BORDER);
         context.fill(panelLeft, panelTop, panelLeft + PANEL_WIDTH, panelTop + PANEL_HEIGHT, COLOR_PANEL);
 
@@ -144,7 +136,7 @@ public class StatSheetScreen extends Screen {
         super.render(context, mouseX, mouseY, delta);
     }
 
-    /** XP progress toward the next champion level, shown as a filled bar with "xp / needed" text. */
+    // XP bar toward the next level, with "xp / needed" overlaid.
     private void drawXpBar(DrawContext context, int centerX) {
         int needed = ChampionLevelManager.xpForLevel(championLevel + 1);
         float fraction = needed > 0 ? Math.min(1.0f, (float) currentXP / needed) : 0.0f;
@@ -165,7 +157,6 @@ public class StatSheetScreen extends Screen {
 
     @Override
     public boolean shouldCloseOnEsc() {
-        // Block ESC while points are unspent.
-        return remainingPoints <= 0;
+        return remainingPoints <= 0; // no leaving until you've spent your points
     }
 }
