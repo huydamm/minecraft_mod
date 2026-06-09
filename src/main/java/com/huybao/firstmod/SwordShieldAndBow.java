@@ -1,5 +1,10 @@
 package com.huybao.firstmod;
 
+import com.huybao.firstmod.command.ChampionDebugCommand;
+import com.huybao.firstmod.data.PlayerChampionData;
+import com.huybao.firstmod.network.ModNetworking;
+import com.huybao.firstmod.system.ChampionLevelManager;
+import com.huybao.firstmod.system.ChampionStatEffects;
 import net.fabricmc.api.ModInitializer;
 
 import org.slf4j.Logger;
@@ -15,6 +20,18 @@ public class SwordShieldAndBow implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		// Register the per-player champion data attachment (persists through death and restart).
+		PlayerChampionData.initialize();
+		// Register custom payloads (both sides) and server-side packet handling.
+		ModNetworking.registerPayloads();
+		ModNetworking.registerServerSide();
+		// Award champion XP on mob kills and handle level-ups.
+		ChampionLevelManager.register();
+		// Apply stat bonuses (max health / effects) on join and respawn.
+		ChampionStatEffects.register();
+		// TEMPORARY: /champion debug commands for testing (remove when done).
+		ChampionDebugCommand.register();
+
 		ModItems.initialize();
 		ModLootTableModifiers.modifyLootTables();
 	}
