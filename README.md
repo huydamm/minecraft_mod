@@ -1,4 +1,2 @@
 # sword shield and bow mod
-Fisrt ever mod we made. Enjoy!
-
-
+First ever mod we made. Enjoy!
