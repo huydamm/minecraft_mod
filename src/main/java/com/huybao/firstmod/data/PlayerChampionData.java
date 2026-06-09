@@ -11,7 +11,7 @@ import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.codec.PacketCodecs;
 import net.minecraft.util.Identifier;
 
-// Per-player champion data: level, XP, stat points, the 4 stats, and the "owed a screen" flag.
+// Per-player champion data: level, XP, stat points, the 4 stats
 public record PlayerChampionData(
         int champLevel,
         int champXP,

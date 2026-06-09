@@ -9,9 +9,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
 
-// Stat screen: level, XP bar, and +/- per stat. Spending is previewed here and
-// sent to the server on Confirm. Can't ESC out while you still have points left.
-// Heads up: DrawContext colors are ARGB, so the 0xFF alpha matters or it's invisible.
+// Stat screen: level, XP bar
 public class StatSheetScreen extends Screen {
 
     private static final String[] STAT_NAMES = {"Vitality", "Strength", "Dexterity", "Defence"};
