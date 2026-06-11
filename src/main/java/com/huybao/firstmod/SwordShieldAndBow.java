@@ -1,10 +1,12 @@
 package com.huybao.firstmod;
 
 import com.huybao.firstmod.command.ChampionDebugCommand;
+import com.huybao.firstmod.command.DuelCommand;
 import com.huybao.firstmod.data.PlayerChampionData;
 import com.huybao.firstmod.network.ModNetworking;
 import com.huybao.firstmod.system.ChampionLevelManager;
 import com.huybao.firstmod.system.ChampionStatEffects;
+import com.huybao.firstmod.system.DuelManager;
 import net.fabricmc.api.ModInitializer;
 
 import org.slf4j.Logger;
@@ -23,7 +25,9 @@ public class SwordShieldAndBow implements ModInitializer {
 		ModNetworking.registerServerSide();   // + their server handlers
 		ChampionLevelManager.register();      // XP from mob kills
 		ChampionStatEffects.register();       // keep stat bonuses applied
+		DuelManager.register();               // PvP off + /duel system
 		ChampionDebugCommand.register();      // TEMP: /champion test command
+		DuelCommand.register();               // /duel challenge|accept|deny
 
 		ModItems.initialize();
 		ModLootTableModifiers.modifyLootTables();

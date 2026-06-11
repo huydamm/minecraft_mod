@@ -2,8 +2,10 @@ package com.huybao.firstmod.network;
 
 import com.huybao.firstmod.data.PlayerChampionData;
 import com.huybao.firstmod.system.ChampionStatEffects;
+import com.huybao.firstmod.system.DuelManager;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.entity.Entity;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 // Custom payloads and their server-side handlers. Call from onInitialize().
@@ -17,6 +19,7 @@ public final class ModNetworking {
         PayloadTypeRegistry.playS2C().register(OpenStatScreenPayload.ID, OpenStatScreenPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(AllocateStatsPayload.ID, AllocateStatsPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(RequestStatScreenPayload.ID, RequestStatScreenPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(ChallengePlayerPayload.ID, ChallengePlayerPayload.CODEC);
     }
 
     // Server-side packet handling.
@@ -33,6 +36,17 @@ public final class ModNetworking {
             ServerPlayerEntity player = context.player();
             context.server().execute(() ->
                     sendOpenScreen(player, player.getAttachedOrCreate(PlayerChampionData.ATTACHMENT)));
+        });
+
+        // client picked "Duel" on a right-clicked player
+        ServerPlayNetworking.registerGlobalReceiver(ChallengePlayerPayload.ID, (payload, context) -> {
+            ServerPlayerEntity challenger = context.player();
+            context.server().execute(() -> {
+                Entity target = challenger.getEntityWorld().getEntityById(payload.targetEntityId());
+                if (target instanceof ServerPlayerEntity targetPlayer) {
+                    DuelManager.challenge(challenger, targetPlayer);
+                }
+            });
         });
     }
 

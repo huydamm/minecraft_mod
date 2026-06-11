@@ -2,6 +2,7 @@ package com.huybao.firstmod.client;
 
 import com.huybao.firstmod.SwordShieldAndBow;
 import com.huybao.firstmod.client.hud.ChampionHudOverlay;
+import com.huybao.firstmod.client.screen.PlayerInteractScreen;
 import com.huybao.firstmod.client.screen.StatSheetScreen;
 import com.huybao.firstmod.network.OpenStatScreenPayload;
 import com.huybao.firstmod.network.RequestStatScreenPayload;
@@ -10,9 +11,13 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
+import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 
 public class SwordShieldAndBowClient implements ClientModInitializer {
@@ -42,6 +47,17 @@ public class SwordShieldAndBowClient implements ClientModInitializer {
 					.build();
 
 			Screens.getButtons(screen).add(statsButton);
+		});
+
+		// Right-clicking another player opens an options panel (Duel, etc.).
+		UseEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
+			// one hand only, so we don't open the panel twice per click
+			if (hand != Hand.MAIN_HAND || !(entity instanceof PlayerEntity) || entity == player) {
+				return ActionResult.PASS;
+			}
+			net.minecraft.client.MinecraftClient.getInstance().setScreen(
+					new PlayerInteractScreen(entity.getId(), entity.getName().getString()));
+			return ActionResult.SUCCESS; // consume so vanilla doesn't also handle the click
 		});
 
 		// champion XP bar on the HUD. addLast = drawn on top so nothing covers it.
