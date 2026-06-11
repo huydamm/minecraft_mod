@@ -12,6 +12,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.entity.player.PlayerEntity;
@@ -50,12 +51,14 @@ public class SwordShieldAndBowClient implements ClientModInitializer {
 		});
 
 		// Right-clicking another player opens an options panel (Duel, etc.).
+		// This event also fires on the integrated server thread, where touching a screen
+		// would crash — so bail unless we're the client. One hand only, no self-clicks.
 		UseEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
-			// one hand only, so we don't open the panel twice per click
-			if (hand != Hand.MAIN_HAND || !(entity instanceof PlayerEntity) || entity == player) {
+			if (!world.isClient() || hand != Hand.MAIN_HAND
+					|| !(entity instanceof PlayerEntity) || entity == player) {
 				return ActionResult.PASS;
 			}
-			net.minecraft.client.MinecraftClient.getInstance().setScreen(
+			MinecraftClient.getInstance().setScreen(
 					new PlayerInteractScreen(entity.getId(), entity.getName().getString()));
 			return ActionResult.SUCCESS; // consume so vanilla doesn't also handle the click
 		});
