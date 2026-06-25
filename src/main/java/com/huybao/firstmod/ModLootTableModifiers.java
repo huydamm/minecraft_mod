@@ -18,8 +18,8 @@ import java.util.Set;
 
 public class ModLootTableModifiers {
 
-    // 25% chance
-    private static final float DROP_CHANCE = 0.25f;
+    // 75% chance
+    private static final float DROP_CHANCE = 0.75f;
 
     public static void modifyLootTables() {
 
