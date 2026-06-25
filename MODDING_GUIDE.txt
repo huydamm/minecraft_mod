@@ -57,6 +57,8 @@ src/main/resources/                       <- non-code assets
         items/                            <- item definitions (1.21.4+ format)
         models/item/                      <- item models
         textures/item/                    <- .png textures (16x16 for items)
+    data/sword-shield-and-bow/
+        recipe/                           <- crafting recipes (JSON, no code)
 
 RULE OF THUMB: new behavior = a .java file + a line in an entrypoint.
                new content (item/block) = .java registration + matching
@@ -123,6 +125,146 @@ Checklist if the item shows up as a purple/black "missing texture":
   - filename of the .png exactly matches the model's layer0 name
   - the items/ json exists (this is the one people forget on 1.21.4+)
   - no trailing-comma typo in en_us.json (breaks the whole file silently)
+
+
+------------------------------------------------------------------------------
+ 2A. RECIPE: ADD A WEAPON (sword / pickaxe / axe etc.)
+------------------------------------------------------------------------------
+IMPORTANT (1.21.x change): there is NO "SwordItem" / "PickaxeItem" class
+anymore. A weapon is just a normal Item whose Settings are tagged with a
+tool/weapon builder. You give it stats inline. So registration is the same
+register(...) call as a plain item, just with a beefier Settings.
+
+STEP 1 - Register it (code)
+  File: src/main/java/com/huybao/firstmod/ModItems.java
+
+    Sword example ("ruby_sword"):
+      public static final Item RUBY_SWORD = register("ruby_sword", Item::new,
+          new Item.Settings()
+              .sword(ToolMaterial.IRON, 3.0f, -2.4f));
+              //     ^material         ^extra dmg ^attack speed
+
+    Pickaxe example:
+      public static final Item RUBY_PICKAXE = register("ruby_pickaxe", Item::new,
+          new Item.Settings()
+              .pickaxe(ToolMaterial.IRON, 1.0f, -2.8f));
+
+  Builders available on Item.Settings: .sword(mat, dmg, speed),
+  .pickaxe / .axe / .shovel / .hoe (mat, dmg, speed).
+  Material presets live on ToolMaterial itself:
+      ToolMaterial.WOOD / STONE / COPPER / IRON / GOLD / DIAMOND / NETHERITE
+  The material decides durability + mining tier; the two floats are the
+  attack-damage bonus and attack speed (vanilla sword is 3.0f / -2.4f).
+  Import: net.minecraft.item.ToolMaterial
+
+  Don't forget to add it to the creative tab (entries.add(RUBY_SWORD);) and to
+  en_us.json, same as a normal item.
+
+STEP 2 - Model is slightly different
+  Tools/weapons should render in the hand, so the MODEL json uses the
+  "handheld" parent instead of "generated":
+      src/main/resources/assets/sword-shield-and-bow/models/item/ruby_sword.json
+      {
+        "parent": "minecraft:item/handheld",
+        "textures": { "layer0": "sword-shield-and-bow:item/ruby_sword" }
+      }
+  Everything else (texture png, the items/ json, lang entry) is identical to
+  the plain-item steps 2/4/5 above.
+
+  Tip: a custom ToolMaterial (your own durability/tier) is possible via
+  new ToolMaterial(...) but for a first weapon just reuse a vanilla preset.
+
+
+------------------------------------------------------------------------------
+ 2B. RECIPE: ADD ARMOR
+------------------------------------------------------------------------------
+Same idea as weapons: armor is a normal Item with an .armor(...) Settings
+builder. One Java field per piece (helmet/chestplate/leggings/boots).
+
+STEP 1 - Register the pieces (code)
+  File: src/main/java/com/huybao/firstmod/ModItems.java
+
+      public static final Item RUBY_HELMET = register("ruby_helmet", Item::new,
+          new Item.Settings().armor(ArmorMaterials.IRON, EquipmentType.HELMET));
+      public static final Item RUBY_CHESTPLATE = register("ruby_chestplate", Item::new,
+          new Item.Settings().armor(ArmorMaterials.IRON, EquipmentType.CHESTPLATE));
+      public static final Item RUBY_LEGGINGS = register("ruby_leggings", Item::new,
+          new Item.Settings().armor(ArmorMaterials.IRON, EquipmentType.LEGGINGS));
+      public static final Item RUBY_BOOTS = register("ruby_boots", Item::new,
+          new Item.Settings().armor(ArmorMaterials.IRON, EquipmentType.BOOTS));
+
+  Imports:
+      net.minecraft.item.equipment.ArmorMaterials
+      net.minecraft.item.equipment.EquipmentType
+  Material presets: ArmorMaterials.LEATHER / CHAIN / IRON / GOLD / DIAMOND /
+  NETHERITE / TURTLE_SCUTE / ARMADILLO_SCUTE (these set the protection values).
+  EquipmentType.HELMET / CHESTPLATE / LEGGINGS / BOOTS picks the slot.
+
+  Add each piece to the creative tab and to en_us.json.
+
+STEP 2 - Inventory icon (per piece)
+  Each piece needs its own texture + model + items/ json, exactly like a plain
+  item (parent "minecraft:item/generated"). e.g. ruby_helmet.png, etc.
+
+STEP 3 - The texture you SEE WORN on the player
+  Because we passed ArmorMaterials.IRON above, the armor will look like IRON
+  when worn (it reuses iron's worn-armor texture). That's the easy path and is
+  totally fine to start.
+  To give it a UNIQUE worn look you'd define your own ArmorMaterial pointing at
+  an "equipment asset" (assets/<modid>/equipment/<name>.json) plus the body
+  texture under textures/entity/equipment/. That's an advanced step - skip it
+  until the basic armor works.
+
+
+------------------------------------------------------------------------------
+ 2C. RECIPE: ADD A CRAFTING RECIPE (data-driven, no Java)
+------------------------------------------------------------------------------
+Recipes are pure JSON data packs - no code needed. They go under DATA, not
+assets:
+      src/main/resources/data/sword-shield-and-bow/recipe/<name>.json
+  NOTE: the folder is "recipe" (SINGULAR) in 1.21.x. Older guides say
+  "recipes" - that no longer works.
+
+SHAPED example - ruby_sword from 2 rubies + 1 stick:
+  File: data/sword-shield-and-bow/recipe/ruby_sword.json
+      {
+        "type": "minecraft:crafting_shaped",
+        "pattern": [
+          " R ",
+          " R ",
+          " S "
+        ],
+        "key": {
+          "R": { "item": "sword-shield-and-bow:ruby" },
+          "S": { "item": "minecraft:stick" }
+        },
+        "result": {
+          "id": "sword-shield-and-bow:ruby_sword",
+          "count": 1
+        }
+      }
+
+SHAPELESS example - 9 gold_coin -> 1 gold_ingot:
+  File: data/sword-shield-and-bow/recipe/gold_coin_to_ingot.json
+      {
+        "type": "minecraft:crafting_shapeless",
+        "ingredients": [
+          { "item": "sword-shield-and-bow:gold_coin" },
+          { "item": "sword-shield-and-bow:gold_coin" }
+        ],
+        "result": { "id": "minecraft:gold_ingot", "count": 1 }
+      }
+  (list the ingredient once per item used; add as many lines as needed.)
+
+Other "type" values you can use the same way: minecraft:smelting,
+minecraft:blasting, minecraft:smoking, minecraft:stonecutting.
+
+Testing recipes:
+  - Recipes load from the data pack at world load. After editing JSON you can
+    run  /reload  in-game instead of restarting.
+  - In creative, look the recipe up in the recipe book to confirm it loaded.
+  - If it "does nothing", it's almost always a wrong item id or a JSON typo;
+    check the game log for a recipe parse error.
 
 
 ------------------------------------------------------------------------------
