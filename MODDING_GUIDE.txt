@@ -1,0 +1,202 @@
+==============================================================================
+ SWORD, SHIELD & BOW - MODDING GUIDE
+==============================================================================
+
+A quick start for working on this mod after cloning the repo. It's a Fabric
+mod for Minecraft 1.21.11, Java 21.
+
+Two names you'll see everywhere, don't mix them up:
+  - MOD ID (used in files/registries/assets paths): sword-shield-and-bow
+  - Java package (the code lives here):             com.huybao.firstmod
+    (yes, the folder is "firstmod" even though the mod is sword-shield-and-bow)
+
+
+------------------------------------------------------------------------------
+ 0. ONE-TIME SETUP
+------------------------------------------------------------------------------
+Install:
+  - JDK 21 (must be 21, not 17 or 23)
+  - IntelliJ IDEA (Community is fine) -> open the folder, let it import Gradle.
+
+Useful commands (run from the project root):
+  ./gradlew build              -> compile + build the .jar (in build/libs/)
+  ./gradlew runClient          -> launch Minecraft with the mod loaded
+  ./gradlew runServer          -> launch a dedicated server with the mod
+  ./gradlew genSources         -> decompile Minecraft so you can read vanilla code
+
+On Windows use  gradlew.bat  instead of  ./gradlew  (or just hit the green
+Run arrows / Gradle tasks panel in IntelliJ).
+
+The fastest dev loop: run runClient once, then use IntelliJ's "Build Project"
+(Ctrl+F9) to hot-reload most code changes without restarting.
+
+
+------------------------------------------------------------------------------
+ 1. WHERE THINGS LIVE
+------------------------------------------------------------------------------
+src/main/java/com/huybao/firstmod/        <- server + common code (most logic)
+    SwordShieldAndBow.java                <- MAIN entrypoint. Everything gets
+                                             wired up here in onInitialize().
+    ModItems.java                         <- all items are registered here
+    ModLootTableModifiers.java            <- mob drop edits
+    data/                                 <- saved player data, the class enum
+    system/                               <- gameplay systems (XP, classes, duels)
+    command/                              <- /commands
+    network/                              <- client<->server packets
+    mixin/                                <- vanilla code patches (advanced)
+
+src/client/java/com/huybao/firstmod/client/   <- client-only code (UI/HUD)
+    SwordShieldAndBowClient.java          <- CLIENT entrypoint
+    screen/                               <- GUI screens
+    hud/                                  <- on-screen overlays
+
+src/main/resources/                       <- non-code assets
+    fabric.mod.json                       <- mod metadata (name, version, deps)
+    assets/sword-shield-and-bow/
+        lang/en_us.json                   <- display names / text
+        items/                            <- item definitions (1.21.4+ format)
+        models/item/                      <- item models
+        textures/item/                    <- .png textures (16x16 for items)
+
+RULE OF THUMB: new behavior = a .java file + a line in an entrypoint.
+               new content (item/block) = .java registration + matching
+               files under resources/assets/.
+
+
+------------------------------------------------------------------------------
+ 2. RECIPE: ADD A NEW ITEM
+------------------------------------------------------------------------------
+Say we want an item called "silver_coin". Item ID is always lowercase with
+underscores. You need ONE code edit and FOUR resource files.
+
+STEP 1 - Register it (code)
+  File: src/main/java/com/huybao/firstmod/ModItems.java
+  Add a field next to GOLD_COIN:
+
+      public static final Item SILVER_COIN =
+          register("silver_coin", Item::new, new Item.Settings().maxCount(64));
+
+  Then make it show up in the creative menu inside addItemsToItemGroups():
+
+      entries.add(SILVER_COIN);
+
+  (ModItems is already started from SwordShieldAndBow.onInitialize(), so you
+   don't need to touch the entrypoint for a plain item.)
+
+STEP 2 - Texture
+  Drop a 16x16 PNG here:
+      src/main/resources/assets/sword-shield-and-bow/textures/item/silver_coin.png
+
+STEP 3 - Model
+  Create:
+      src/main/resources/assets/sword-shield-and-bow/models/item/silver_coin.json
+  Contents (copy gold_coin.json, change the name):
+      {
+        "parent": "minecraft:item/generated",
+        "textures": {
+          "layer0": "sword-shield-and-bow:item/silver_coin"
+        }
+      }
+
+STEP 4 - Item definition (1.21.4+ requires this)
+  Create:
+      src/main/resources/assets/sword-shield-and-bow/items/silver_coin.json
+  Contents:
+      {
+        "model": {
+          "type": "minecraft:model",
+          "model": "sword-shield-and-bow:item/silver_coin"
+        }
+      }
+
+STEP 5 - Display name
+  File: src/main/resources/assets/sword-shield-and-bow/lang/en_us.json
+  Add a line (mind the commas in JSON):
+      "item.sword-shield-and-bow.silver_coin": "Silver Coin"
+
+STEP 6 - Test
+  ./gradlew runClient
+  Open the creative inventory (Ingredients tab) and search "silver".
+  In-game you can also run:  /give @s sword-shield-and-bow:silver_coin
+
+Checklist if the item shows up as a purple/black "missing texture":
+  - filename of the .png exactly matches the model's layer0 name
+  - the items/ json exists (this is the one people forget on 1.21.4+)
+  - no trailing-comma typo in en_us.json (breaks the whole file silently)
+
+
+------------------------------------------------------------------------------
+ 3. RECIPE: MAKE MOBS DROP YOUR ITEM
+------------------------------------------------------------------------------
+  File: src/main/java/com/huybao/firstmod/ModLootTableModifiers.java
+  This already adds GOLD_COIN to every hostile mob at a 75% chance. To add
+  another drop, add another ItemEntry to the pool, or copy the block. The
+  DROP_CHANCE constant at the top controls the odds (0.75 = 75%).
+
+
+------------------------------------------------------------------------------
+ 4. RECIPE: ADD A PLAYER CLASS
+------------------------------------------------------------------------------
+Classes are: KNIGHT, ARCHER, GIANT, VAGABOND. To add one (e.g. MAGE):
+
+  1. File: src/main/java/com/huybao/firstmod/data/PlayerClass.java
+     Add MAGE to the enum list.
+
+  2. File: src/main/java/com/huybao/firstmod/system/ClassManager.java
+     Add MAGE's stat modifiers in applyModifiers(...) so the class actually
+     does something.
+
+  3. File: src/client/java/com/huybao/firstmod/client/screen/ClassSelectionScreen.java
+     Add a button for it so players can pick it.
+
+  4. File: lang/en_us.json
+     Add display text for any new buttons/labels you reference.
+
+NOTE on player data: PlayerChampionData.java is a "record" that holds saved
+player stats. If you add a field to it you must update it in FOUR places: the
+record header, the DEFAULT, the CODEC (disk save), and the PACKET_CODEC
+(write/read, for syncing to the client). Follow how an existing field like
+xpBonus is threaded through all of them.
+
+
+------------------------------------------------------------------------------
+ 5. RECIPE: ADD A COMMAND
+------------------------------------------------------------------------------
+  Look at src/main/java/com/huybao/firstmod/command/DuelCommand.java as a
+  template. Make your own SomethingCommand.java with a static register()
+  method, then call it from SwordShieldAndBow.onInitialize():
+
+      SomethingCommand.register();
+
+  Anything that needs starting up gets a line in onInitialize() (or in the
+  client entrypoint for client-only stuff). That file is the master switch.
+
+
+------------------------------------------------------------------------------
+ 6. WORKING WITH GIT (so we don't clobber each other)
+------------------------------------------------------------------------------
+  git pull --rebase        before you start, to get the latest
+  ...make changes...
+  git add -A
+  git commit -m "what you did"
+  git pull --rebase        again, in case the other person pushed
+  git push
+
+  If a push is rejected, it means the remote moved. Do:  git pull --rebase
+  then push again.
+
+
+------------------------------------------------------------------------------
+ 7. WHEN SOMETHING BREAKS
+------------------------------------------------------------------------------
+  - Won't compile: read the first error in the build output, not the last.
+  - Game crashes on launch: open the latest file in run/logs/ , the real
+    cause is usually a "Caused by:" line near the bottom.
+  - Item/texture not appearing: see the checklist in section 2.
+  - JSON change "did nothing": you probably broke the JSON syntax (comma /
+    bracket). Paste it into a JSON validator.
+  - Still stuck: ./gradlew --refresh-dependencies build , and in IntelliJ
+    File > Invalidate Caches.
+
+Happy modding.
+==============================================================================
