@@ -22,7 +22,7 @@ public record PlayerChampionData(
         boolean needsStatScreen,
         PlayerClass playerClass,
         boolean hasChosenClass,
-        boolean xpPenalty
+        boolean xpBonus
 ) {
     public static final PlayerChampionData DEFAULT =
             new PlayerChampionData(0, 0, 0, 0, 0, 0, 0, false, PlayerClass.NONE, false, false);
@@ -39,12 +39,9 @@ public record PlayerChampionData(
             Codec.BOOL.optionalFieldOf("needsStatScreen", false).forGetter(PlayerChampionData::needsStatScreen),
             PlayerClass.CODEC.optionalFieldOf("playerClass", PlayerClass.NONE).forGetter(PlayerChampionData::playerClass),
             Codec.BOOL.optionalFieldOf("hasChosenClass", false).forGetter(PlayerChampionData::hasChosenClass),
-            Codec.BOOL.optionalFieldOf("xpPenalty", false).forGetter(PlayerChampionData::xpPenalty)
+            Codec.BOOL.optionalFieldOf("xpBonus", false).forGetter(PlayerChampionData::xpBonus)
     ).apply(instance, PlayerChampionData::new));
 
-    // Network codec — syncs this data to the owning client so the HUD can read it.
-    // Hand-written (instead of PacketCodec.tuple) because we now have more fields than
-    // tuple has overloads for.
     public static final PacketCodec<RegistryByteBuf, PlayerChampionData> PACKET_CODEC =
             PacketCodec.ofStatic(PlayerChampionData::write, PlayerChampionData::read);
 
@@ -59,7 +56,7 @@ public record PlayerChampionData(
         buf.writeBoolean(data.needsStatScreen);
         buf.writeVarInt(data.playerClass.ordinal());
         buf.writeBoolean(data.hasChosenClass);
-        buf.writeBoolean(data.xpPenalty);
+        buf.writeBoolean(data.xpBonus);
     }
 
     private static PlayerChampionData read(RegistryByteBuf buf) {
@@ -73,13 +70,12 @@ public record PlayerChampionData(
         boolean needsStatScreen = buf.readBoolean();
         PlayerClass playerClass = PlayerClass.byId(buf.readVarInt());
         boolean hasChosenClass = buf.readBoolean();
-        boolean xpPenalty = buf.readBoolean();
+        boolean xpBonus = buf.readBoolean();
         return new PlayerChampionData(champLevel, champXP, statPoints, vitality, strength, defence,
-                dexterity, needsStatScreen, playerClass, hasChosenClass, xpPenalty);
+                dexterity, needsStatScreen, playerClass, hasChosenClass, xpBonus);
     }
 
     // The attachment: persistent = saved to disk, copyOnDeath = survives respawn,
-    // initializer = default for new players, syncWith = mirror to the owning client.
     public static final AttachmentType<PlayerChampionData> ATTACHMENT = AttachmentRegistry.create(
             Identifier.of(SwordShieldAndBow.MOD_ID, "champion_data"),
             builder -> builder
@@ -94,46 +90,46 @@ public record PlayerChampionData(
     }
 
     public PlayerChampionData withChampLevel(int value) {
-        return new PlayerChampionData(value, champXP, statPoints, vitality, strength, defence, dexterity, needsStatScreen, playerClass, hasChosenClass, xpPenalty);
+        return new PlayerChampionData(value, champXP, statPoints, vitality, strength, defence, dexterity, needsStatScreen, playerClass, hasChosenClass, xpBonus);
     }
 
     public PlayerChampionData withChampXP(int value) {
-        return new PlayerChampionData(champLevel, value, statPoints, vitality, strength, defence, dexterity, needsStatScreen, playerClass, hasChosenClass, xpPenalty);
+        return new PlayerChampionData(champLevel, value, statPoints, vitality, strength, defence, dexterity, needsStatScreen, playerClass, hasChosenClass, xpBonus);
     }
 
     public PlayerChampionData withStatPoints(int value) {
-        return new PlayerChampionData(champLevel, champXP, value, vitality, strength, defence, dexterity, needsStatScreen, playerClass, hasChosenClass, xpPenalty);
+        return new PlayerChampionData(champLevel, champXP, value, vitality, strength, defence, dexterity, needsStatScreen, playerClass, hasChosenClass, xpBonus);
     }
 
     public PlayerChampionData withVitality(int value) {
-        return new PlayerChampionData(champLevel, champXP, statPoints, value, strength, defence, dexterity, needsStatScreen, playerClass, hasChosenClass, xpPenalty);
+        return new PlayerChampionData(champLevel, champXP, statPoints, value, strength, defence, dexterity, needsStatScreen, playerClass, hasChosenClass, xpBonus);
     }
 
     public PlayerChampionData withStrength(int value) {
-        return new PlayerChampionData(champLevel, champXP, statPoints, vitality, value, defence, dexterity, needsStatScreen, playerClass, hasChosenClass, xpPenalty);
+        return new PlayerChampionData(champLevel, champXP, statPoints, vitality, value, defence, dexterity, needsStatScreen, playerClass, hasChosenClass, xpBonus);
     }
 
     public PlayerChampionData withDefence(int value) {
-        return new PlayerChampionData(champLevel, champXP, statPoints, vitality, strength, value, dexterity, needsStatScreen, playerClass, hasChosenClass, xpPenalty);
+        return new PlayerChampionData(champLevel, champXP, statPoints, vitality, strength, value, dexterity, needsStatScreen, playerClass, hasChosenClass, xpBonus);
     }
 
     public PlayerChampionData withDexterity(int value) {
-        return new PlayerChampionData(champLevel, champXP, statPoints, vitality, strength, defence, value, needsStatScreen, playerClass, hasChosenClass, xpPenalty);
+        return new PlayerChampionData(champLevel, champXP, statPoints, vitality, strength, defence, value, needsStatScreen, playerClass, hasChosenClass, xpBonus);
     }
 
     public PlayerChampionData withNeedsStatScreen(boolean value) {
-        return new PlayerChampionData(champLevel, champXP, statPoints, vitality, strength, defence, dexterity, value, playerClass, hasChosenClass, xpPenalty);
+        return new PlayerChampionData(champLevel, champXP, statPoints, vitality, strength, defence, dexterity, value, playerClass, hasChosenClass, xpBonus);
     }
 
     public PlayerChampionData withPlayerClass(PlayerClass value) {
-        return new PlayerChampionData(champLevel, champXP, statPoints, vitality, strength, defence, dexterity, needsStatScreen, value, hasChosenClass, xpPenalty);
+        return new PlayerChampionData(champLevel, champXP, statPoints, vitality, strength, defence, dexterity, needsStatScreen, value, hasChosenClass, xpBonus);
     }
 
     public PlayerChampionData withHasChosenClass(boolean value) {
-        return new PlayerChampionData(champLevel, champXP, statPoints, vitality, strength, defence, dexterity, needsStatScreen, playerClass, value, xpPenalty);
+        return new PlayerChampionData(champLevel, champXP, statPoints, vitality, strength, defence, dexterity, needsStatScreen, playerClass, value, xpBonus);
     }
 
-    public PlayerChampionData withXpPenalty(boolean value) {
+    public PlayerChampionData withXpBonus(boolean value) {
         return new PlayerChampionData(champLevel, champXP, statPoints, vitality, strength, defence, dexterity, needsStatScreen, playerClass, hasChosenClass, value);
     }
 }

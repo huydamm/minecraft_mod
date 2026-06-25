@@ -90,7 +90,7 @@ public final class ClassManager {
         PlayerChampionData updated = data
                 .withPlayerClass(chosen)
                 .withHasChosenClass(true)
-                .withXpPenalty(chosen == PlayerClass.VAGABOND);
+                .withXpBonus(chosen == PlayerClass.VAGABOND);
         player.setAttached(PlayerChampionData.ATTACHMENT, updated);
 
         applyModifiers(player, chosen);
