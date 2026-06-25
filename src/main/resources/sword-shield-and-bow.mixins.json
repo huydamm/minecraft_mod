@@ -3,7 +3,8 @@
 	"package": "com.huybao.firstmod.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
-		"ExampleMixin"
+		"ExampleMixin",
+		"PersistentProjectileEntityAccessor"
 	],
 	"injectors": {
 		"defaultRequire": 1

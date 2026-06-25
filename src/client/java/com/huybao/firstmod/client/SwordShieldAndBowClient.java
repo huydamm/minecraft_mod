@@ -2,8 +2,10 @@ package com.huybao.firstmod.client;
 
 import com.huybao.firstmod.SwordShieldAndBow;
 import com.huybao.firstmod.client.hud.ChampionHudOverlay;
+import com.huybao.firstmod.client.screen.ClassSelectionScreen;
 import com.huybao.firstmod.client.screen.PlayerInteractScreen;
 import com.huybao.firstmod.client.screen.StatSheetScreen;
+import com.huybao.firstmod.network.OpenClassScreenS2CPacket;
 import com.huybao.firstmod.network.OpenStatScreenPayload;
 import com.huybao.firstmod.network.RequestStatScreenPayload;
 import net.fabricmc.api.ClientModInitializer;
@@ -33,6 +35,11 @@ public class SwordShieldAndBowClient implements ClientModInitializer {
 		ClientPlayNetworking.registerGlobalReceiver(OpenStatScreenPayload.ID, (payload, context) ->
 				context.client().execute(() ->
 						context.client().setScreen(new StatSheetScreen(payload))));
+
+		// server says open the first-join class picker
+		ClientPlayNetworking.registerGlobalReceiver(OpenClassScreenS2CPacket.ID, (payload, context) ->
+				context.client().execute(() ->
+						context.client().setScreen(new ClassSelectionScreen())));
 
 		// "Stats" button in the inventory. The client has no data, so it just asks the server to open.
 		ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {

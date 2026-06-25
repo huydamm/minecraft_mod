@@ -2,6 +2,7 @@ package com.huybao.firstmod.network;
 
 import com.huybao.firstmod.data.PlayerChampionData;
 import com.huybao.firstmod.system.ChampionStatEffects;
+import com.huybao.firstmod.system.ClassManager;
 import com.huybao.firstmod.system.DuelManager;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -17,9 +18,11 @@ public final class ModNetworking {
     // Register payload codecs — runs on both sides.
     public static void registerPayloads() {
         PayloadTypeRegistry.playS2C().register(OpenStatScreenPayload.ID, OpenStatScreenPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(OpenClassScreenS2CPacket.ID, OpenClassScreenS2CPacket.CODEC);
         PayloadTypeRegistry.playC2S().register(AllocateStatsPayload.ID, AllocateStatsPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(RequestStatScreenPayload.ID, RequestStatScreenPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(ChallengePlayerPayload.ID, ChallengePlayerPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(SelectClassC2SPacket.ID, SelectClassC2SPacket.CODEC);
     }
 
     // Server-side packet handling.
@@ -36,6 +39,12 @@ public final class ModNetworking {
             ServerPlayerEntity player = context.player();
             context.server().execute(() ->
                     sendOpenScreen(player, player.getAttachedOrCreate(PlayerChampionData.ATTACHMENT)));
+        });
+
+        // client chose a class on the first-join screen
+        ServerPlayNetworking.registerGlobalReceiver(SelectClassC2SPacket.ID, (payload, context) -> {
+            ServerPlayerEntity player = context.player();
+            context.server().execute(() -> ClassManager.choose(player, payload.playerClass()));
         });
 
         // client picked "Duel" on a right-clicked player

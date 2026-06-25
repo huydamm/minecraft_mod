@@ -36,8 +36,11 @@ public final class ChampionLevelManager {
 
         PlayerChampionData data = player.getAttachedOrCreate(PlayerChampionData.ATTACHMENT);
 
+        // Vagabond ("No Class") takes a 10% XP cut.
+        int gained = data.xpPenalty() ? (int) Math.floor(amount * 0.9) : amount;
+
         int level = data.champLevel();
-        int xp = data.champXP() + amount;
+        int xp = data.champXP() + gained;
         int statPoints = data.statPoints();
         boolean needsStatScreen = data.needsStatScreen();
 
@@ -53,10 +56,12 @@ public final class ChampionLevelManager {
         }
 
         // Points just sit there until the player opens the screen themselves — nothing pops up.
-        PlayerChampionData updated = new PlayerChampionData(
-                level, xp, statPoints,
-                data.vitality(), data.strength(), data.defence(), data.dexterity(),
-                needsStatScreen);
+        // Keep the class fields (playerClass / hasChosenClass / xpPenalty) untouched.
+        PlayerChampionData updated = data
+                .withChampLevel(level)
+                .withChampXP(xp)
+                .withStatPoints(statPoints)
+                .withNeedsStatScreen(needsStatScreen);
 
         player.setAttached(PlayerChampionData.ATTACHMENT, updated);
     }
